@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabel Kawan (Cookie Data)</title>
+    <style>
+        body { 
+        font-family: Arial, sans-serif; 
+        background-color: white; 
+        text-align: center;
+    }
+        table { 
+            width: 90%; 
+            margin: 20px auto; 
+            border-collapse: collapse; 
+            background: rgb(232, 244, 252); 
+        }
+        th, td { 
+            border: 1px solid black; 
+            padding: 10px; 
+            text-align: center; 
+        }
+        button { 
+            cursor: pointer; 
+        }
+    </style>
+</head>
+<body>
+    <h2>Tabel Kawan Fitri</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>NIM</th>
+                <th>Nama</th>
+                <th>Kelas</th>
+                <th>Prodi</th>
+                <th>Alamat</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="kawanList"></tbody>
+    </table>
+    <button onclick="addKawan()">Tambah Kawan</button>
+
+    <script>
+        // Fungsi untuk menyimpan data ke cookie
+        function saveToCookie(data) {
+            document.cookie = `kawanData=${JSON.stringify(data)}; path=/; max-age=604800`; // Tersimpan 7 hari
+        }
+
+        // Fungsi untuk mengambil data dari cookie
+        function loadFromCookie() {
+            let cookies = document.cookie.split("; ");
+            for (let cookie of cookies) {
+                let [name, value] = cookie.split("=");
+                if (name === "kawanData") {
+                    return JSON.parse(value);
+                }
+            }
+            return []; // Jika tidak ada data, return array kosong
+        }
+
+        // Fungsi untuk menampilkan data ke tabel
+        function renderTable() {
+            let tbody = document.getElementById("kawanList");
+            tbody.innerHTML = "";
+            let data = loadFromCookie();
+
+            data.forEach((row, index) => {
+                let tr = tbody.insertRow();
+                tr.innerHTML = `<td>${index + 1}</td>
+                                <td ondblclick="editCell(this, ${index}, 'nim')">${row.nim}</td>
+                                <td ondblclick="editCell(this, ${index}, 'nama')">${row.nama}</td>
+                                <td ondblclick="editCell(this, ${index}, 'kelas')">${row.kelas}</td>
+                                <td ondblclick="editCell(this, ${index}, 'prodi')">${row.prodi}</td>
+                                <td ondblclick="editCell(this, ${index}, 'alamat')">${row.alamat}</td>
+                                <td><button onclick="deleteKawan(${index})">Hapus</button></td>`;
+            });
+        }
+
+        // Fungsi untuk edit cell saat double-click
+        function editCell(cell, index, field) {
+            let oldValue = cell.textContent;
+            cell.innerHTML = `<input type="text" value="${oldValue}">
+                              <button onclick="saveEdit(this, ${index}, '${field}')">OK</button>
+                              <button onclick="cancelEdit(this, '${oldValue}')">Cancel</button>`;
+            cell.querySelector("input").focus();
+        }
+
+        // Fungsi untuk menyimpan perubahan edit
+        function saveEdit(button, index, field) {
+            let input = button.parentElement.querySelector("input");
+            let newValue = input.value.trim();
+
+            let data = loadFromCookie();
+            data[index][field] = newValue;
+            saveToCookie(data);
+            renderTable();
+        }
+
+        // Fungsi untuk membatalkan edit
+        function cancelEdit(button, oldValue) {
+            button.parentElement.innerHTML = oldValue;
+        }
+
+        // Fungsi untuk menghapus satu baris data
+        function deleteKawan(index) {
+            let data = loadFromCookie();
+            data.splice(index, 1);
+            saveToCookie(data);
+            renderTable();
+        }
+
+        // Fungsi untuk menambah kawan baru (dummy data)
+        function addKawan() {
+            let data = loadFromCookie();
+            data.push({ nim: "input nim", nama: "input nama", kelas: "input kelas", prodi: "input program studi", alamat: "input domisili" });
+            saveToCookie(data);
+            renderTable();
+        }
+
+        // Load data saat halaman dibuka
+        window.onload = renderTable;
+    </script>
+</body>
+</html>
